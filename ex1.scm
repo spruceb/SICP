@@ -328,7 +328,8 @@
   (find-divisor n 2))
 
 (define (prime? n)
-  (= n (smallest-divisor n)))
+  (and (> n 1)
+       (= n (smallest-divisor n))))
 
 (define (naive-exp-mod base power m)
   (remainder (expt base power) m))
@@ -534,3 +535,196 @@
 
 (define (mr-5-prime? p)
   (mr-prime? p 5))
+
+;; --------------------------------------------------------------
+
+;; 29 
+
+(define (integral-simpson f a b n)
+  (let ((h (/ (- b a) n)))
+    (define (y k)
+      (f (+ a (* k h))))
+    (define (sum-iter i coeff n total)
+      (if (= i n)
+	  (+ total (y n))
+	  (sum-iter (+ i 1)
+		    (if (= coeff 4)
+			2
+			4)
+		    n
+		    (+ total (* coeff (y i))))))
+    (* (/ h 3)  (sum-iter 1 4 n (y 0)))))
+
+;; Much more accurate, without decimal input even seems to get exact values often
+
+;; 30
+
+(define (sum term a next b)
+  (if (> a b)
+      0
+      (+ (term a)
+         (sum term (next a) next b))))
+
+(define (sum term a next b)
+  (define (iter a result)
+    (if (> a b)
+	result
+	(iter (next a) (+ result (term a)))))
+  (iter a 0))
+
+;; 31
+
+;; a
+
+(define (product-recurse f a next b)
+  (if (> a b)
+      1
+      (* (f a) (product f (next a) next b))))
+(define (product-iter f a next b)
+  (define (iter a result)
+    (if (> a b)
+	result
+	(iter (next a) (* result (f a)))))
+  (iter a 1))
+(define (identity x) x)
+(define (inc n) (+ 1 n))
+(define (dec n) (- n 1))
+
+(define (factorial n)
+  (product-iter identity 1 inc n))
+
+(define (pi-approx n)
+  (define (+-2 x) (+ x 2))
+  (* 8
+     (/ (product-iter square 4 +-2 (- n 1))
+	(product-iter square 3 +-2 n))))
+  
+		
+
+;; 32
+
+;;  a
+
+(define (accumulate-recurse combine initial term a next b)
+  (if (> a b)
+      initial
+      (combine (term a)
+	       (accumulate-recurse combine initial term (next a) next b))))
+;; b
+
+(define (accumulate-iter combine initial term a next b)
+  (define (iter a result)
+    (if (> a b)
+	result
+	(iter (next a) (combine (term a) result))))
+  (iter a initial))
+
+(define (sum-accum f a next b)
+  (accumulate-iter + 0 f a next b))
+(define (product-accum f a next b)
+  (accumulate-iter * 1 f a next b))
+
+;; 33
+
+(define (filtered-accumulate predicate? combine initial term a next b)
+  (if (predicate? a)
+      (if (> a b)
+	  initial
+	  (combine (term a)
+		   (filtered-accumulate predicate? combine initial term (next a) next b)))
+      (filtered-accumulate predicate? combine initial term (next a) next b)))
+
+(define (prime-sum-square a b)
+  (filtered-accumulate prime? + 0 square a inc b))
+
+(define (relatively-prime? a b)
+  (= (gcd a b) 1))
+
+(define (b-fn n)
+  (define (f? a)
+    (relatively-prime? a n)) 
+  (filtered-accumulate f? * 1 identity 1 inc n))
+
+;; 34
+
+;; You'll get an error saying that 2 isn't a function. (f f) will turn into (f 2), which in
+;; turn is (2 2), which is an error.
+
+(define (search f neg-point pos-point)
+  (let ((midpoint (average neg-point pos-point)))
+    (if (close-enough? neg-point pos-point)
+	midpoint
+	(let ((test-value (f midpoint)))
+	  (cond ((positive? test-value)
+		 (search f neg-point midpoint))
+		((negative? test-value)
+		 (search f midpoint pos-point))
+		(else midpoint))))))
+(define (close-enough? x y)
+  (< (abs (- x y)) 0.001))
+
+(define (half-interval-method f a b)
+  (let ((a-value (f a))
+	(b-value (f b)))
+    (cond ((and (negative? a-value) (positive? b-value))
+	   (search f a b))
+	  ((and (negative? b-value) (positive? a-value))
+	   (search f b a))
+	  (else (error "Values are not of opposite sign" a b)))))
+
+(define tolerance 0.00001)
+(define (fixed-point f first-guess)
+  (define (close-enough? v1 v2)
+    (< (abs (- v1 v2))
+       tolerance))
+  (define (try guess)
+    (let ((next (f guess)))
+      (if (close-enough? guess next)
+	  next
+	  (try next))))
+  (try first-guess))
+
+(define (fixed-sqrt x)
+  (fixed-point (lambda (y) (average y (/ x y))) 1))
+
+;; 35
+
+;; 1 + 1/((1 + sqrt(5))/2) = 1 + 2/(1 + sqrt(5) = (1 + sqrt(5))/(1+sqrt(5)) + 2/(1+sqrt(5))
+;; = (3 + sqrt(5))/(1+sqrt(5)) = (3 + sqrt(5) -3sqrt(5) -5)/(1 - 5) = (-2 - 2sqrt(5))/(-4)
+;; = (-1 - sqrt(5))/(-2)  = (1 + sqrt(5))/2
+
+(define fixed-golden-ratio
+  (fixed-point (lambda (x) (average x (+ 1 (/ 1 x)))) 1.))
+
+;; 36
+
+(define (printing-fixed-point f first-guess)
+  (define (close-enough? v1 v2)
+    (< (abs (- v1 v2))
+       tolerance))
+  (define (try guess)
+    (let ((next (f guess)))
+      (display guess)
+      (newline)
+      (if (close-enough? guess next)
+	  next
+	  (try next))))
+  (try first-guess))
+
+;; Finding fixed points of log(1000)/log(x) without average damping gives about a page of output
+;; With gives about 8 tries.
+
+;; 37
+
+(define (cont-frac n d k)
+  (define (recurse i)
+    (if (= i k)
+	(/ (n k) (d k))
+	(+ (d (- i 1)) (/ ( n i) (recurse (+ i 1))))))
+  (/ (n 1) (recurse 2)))
+
+;; 13 iterations is sufficant for 4 decimal accuracy
+
+(define (cont-frac n d k)
+  (define (iter i result)
+  
