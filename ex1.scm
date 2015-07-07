@@ -79,7 +79,7 @@
       guess
       (sqrt-iter (improve guess x) x)))
 
-(define (sqrt x)
+(define (sqrt-it x)
   (sqrt-iter 1.0 x))
 
 
@@ -725,6 +725,145 @@
 
 ;; 13 iterations is sufficant for 4 decimal accuracy
 
-(define (cont-frac n d k)
+(define (cont-frac-iter n d k) 		;recurse
   (define (iter i result)
-  
+    (if (= i 0)
+	result
+	(iter (- i 1)
+	      (+ (d i) (/ (n (+ i 1)) result)))))
+  (/ (n 1) (iter (- k 1) (d k))))
+
+;; 38
+
+(define (e-cf k)
+  (define (d i)
+    (if (= 0 (remainder (+ i 1) 3))
+	(* (/ 2 3) (+ i 1))
+	1))
+  (+ 2 (cont-frac (lambda (x) 1.) d k)))
+
+;; 39
+
+(define (tan-cf x k)
+  (cont-frac-iter (lambda (i) (if (= i 1)
+				  x
+				  (- (square x))))
+		  (lambda (i) (+ 1 (* 2 (- i 1))))
+		  k))
+
+;; ------------------------------
+
+(define (average-damp f)
+  (lambda (x) (average x (f x))))
+
+(define (derive g)
+  (lambda (x) (/ (- (g (+ x dx)) (g x)) dx)))
+
+(define dx 0.000001)
+
+(define (cube x) (* x x x))
+
+(define (newton-transform g)
+  (lambda (x) (- x (/ (g x) ((derive g) x)))))
+(define (newtons-method g guess)
+  (fixed-point (newton-transform g) guess))
+
+(define (sqrt-nm x)
+  (newtons-method
+   (lambda (y) (- (square y) x )) 1.0))
+
+(define (fixed-point-of-transform g transform guess)
+  (fixed-point (trasnform g) guess))
+
+(define (sqrt-a x)
+  (fixed-point-of-transform
+   (lambda y (/ x y)) average-damp 1.0))
+
+(define (sqrt-a x)
+  (lambda (y) (- (square y) x)) newton-transform 1.0)
+
+;; 40
+
+(define (cubic a b c)
+  (lambda (y) (+ (cube y) (* a (square y)) (* b y) c)))
+(define (cubic-zero a b c)
+  (newtons-method (cubic a b c) 1))
+
+;; 41
+
+(define (double f)
+  (lambda (x) (f (f x))))
+
+;; 21. The first call (double double) returns a function that takes a function and applies
+;; it to the result of calling it on its argument 4 times.
+
+;; 42
+
+(define (compose f g)
+  (lambda (x) (f (g x))))
+
+;; 43
+
+(define (repeated f n)
+  (define (recurse i)
+    (if (= i 1) f
+	(compose f (recurse (- i 1)))))
+  (recurse n))
+
+;; 44
+(define (average-3 a b c)
+  (/ (+ a b c) 3))
+(define (smooth-dx f dx)
+  (lambda (x) (average-3
+	       (f (- x dx))
+	       (f x)
+	       (f (+ x dx)))))
+
+(define (smooth f)
+  (smooth-dx f dx))
+
+(define (n-fold-smoothed f n)
+  ((repeated smooth n) f))
+
+;; 45
+
+;; Testing shows that roots require an extra damping at each power of 2
+(define (log2 n)
+  (/ (log n) (log 2)))
+(define (nth-root n x)
+  (fixed-point
+   ((repeated average-damp
+	      (floor (log2 n)))
+    (lambda (y) (/ x (expt y (- n 1))))) 1))
+    
+;; 46
+
+(define (iterative-improve good-enough? improve)
+  (define (iter guess)
+    (if (good-enough? guess)
+	guess
+	(iter (improve guess))))
+  iter)
+
+(define (sqrt-imp x)
+  ((iterative-improve
+   (lambda (guess) (< (abs (- x (square guess))) tolerance))
+   (lambda (guess) (average guess (/ x guess))))
+   x))
+
+(define (fixed-point f first-guess)
+  (define (close-enough? v1 v2)
+    (< (abs (- v1 v2))
+       tolerance))
+  (define (try guess)
+    (let ((next (f guess)))
+      (if (close-enough? guess next)
+	  next
+	  (try next))))
+  (try first-guess))
+
+(define (fixed-point f first-guess)   
+  ((iterative-improve
+   (lambda (guess) (< (abs (- guess (f guess))) tolerance))
+   f) first-guess))
+
