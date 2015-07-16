@@ -1,4 +1,4 @@
-;; Chapter 2
+;; chapter 2
 (load "ex1.scm")
 ;; 1
 (define (positive? n) (< 0 n))
@@ -118,7 +118,7 @@
 (define (p-cdr z)
   (z (lambda (p q) q)))
 
-;; Expansion:
+;; expansion:
 ;; (p-car (p-cons x y))
 ;; (p-car (lambda (m) (m x y)))
 ;; ((lambda (m) (m x y)) (lambda (p q) p))
@@ -196,8 +196,8 @@
 
 ;; 8
 
-;; If a and b are intervals, then the highest possible value of a - b will be the maximum
-;; possible value of a minus the minimum possible value of b. The lowest possible value
+;; if a and b are intervals, then the highest possible value of a - b will be the maximum
+;; possible value of a minus the minimum possible value of b. the lowest possible value
 ;; will be the lower bound of a minus the upper bound of b
 
 (define (sub-interval x y)
@@ -209,15 +209,15 @@
 (define (width interval)
   (/ (abs (- (upper-bound interval) (lower-bound interval))) 2))
 
-;; Assume we have interval x with upper bound a and lower bound b, and interval y with
-;; bounds c and d. (x + y) has upper bound (a + c) and lower (b + d). The width of x
+;; assume we have interval x with upper bound a and lower bound b, and interval y with
+;; bounds c and d. (x + y) has upper bound (a + c) and lower (b + d). the width of x
 ;; is (a - b)/2, and the width of y is (c - d)/2, but the width of (x+y) is
 ;; (a + c - (d + b))/2 = (a - b + c - d)/2, which is just width(x) + width(y).
 
-;; However this does not hold true for multipliction. For example, if x is the interval
-;; (1, -20) and y is (5, -10) then xy = (200, -100). The width relies on the maximum of
-;; all the possible products of the bounds of the intervals. Its explicit formula is
-;; (max(1*5, 1*-10, ...) - min(1*5, 1*-10,...))/2. The width of x is (1 + 20)/2 and the
+;; however this does not hold true for multipliction. for example, if x is the interval
+;; (1, -20) and y is (5, -10) then xy = (200, -100). the width relies on the maximum of
+;; all the possible products of the bounds of the intervals. its explicit formula is
+;; (max(1*5, 1*-10, ...) - min(1*5, 1*-10,...))/2. the width of x is (1 + 20)/2 and the
 ;; width of y is (5+10)/2, so clearly there is no way to get the width of xy as a function
 ;; of just those widths (as each interval bound might be needed separately, and the subtraction
 ;; removes that information).
@@ -226,7 +226,7 @@
 
 (define (div-interval x y)
   (if (and (<= 0 (upper-bound y)) (>= 0 (lower-bound y)))
-      (error "Division by interval that includes 0")
+      (error "division by interval that includes 0")
       (mul-interval
        x
        (make-interval (/ 1.0 (upper-bound y))
@@ -261,7 +261,7 @@
 
 ;; 13
 
-;; If all numbers are positive then two intervals will be: x=(a + p1*a, a - p1*a),
+;; if all numbers are positive then two intervals will be: x=(a + p1*a, a - p1*a),
 ;; y=(b + p2*b, b - p2*b). xy will be ((a + p1*a)*(b+p2*b), (a-p1*a)(b-p2*b)) ==
 ;; (ab + a*p2*b + p1*a*b + p1*a*b*p2, a*b -a*p2*b - p1*a*b + p2*p1*a*b) ==
 ;; (approx, if p1*p2 is close to zero) (ab + abp2 + abp1, ab - abp2 - abp1)
@@ -283,15 +283,15 @@
 
 ;; 15
 
-;; It does only use each interval once. Is this better?
-;; It seems so. I think this is because currently if an interval is used more than
-;; once in an expression the uncertainty is "double counted". Each use of the interval
+;; it does only use each interval once. is this better?
+;; it seems so. i think this is because currently if an interval is used more than
+;; once in an expression the uncertainty is "double counted". each use of the interval
 ;; isn't tied to the others, so in once part of the expression it could "take on"
 ;; values inconsistent with the other occurrences
 
 ;; 16
 ;; ...
-;; Maybe I'll come back to this
+;; maybe i'll come back to this
 
 ;; ------------------------------------------------------------
 
@@ -334,7 +334,7 @@
 (define except-first-denomination cdr)
 (define no-more? null?)
 
-;; NOT DONE
+;; not done
 
 ;; 20
 
@@ -389,11 +389,11 @@
 		    answer))))
   (iter items nil))
 
-;; Because the first item in the list is consed in a pair with nil, and then consed
-;; on as the second item in a pair with the newer item first. This builds up pairs
+;; because the first item in the list is consed in a pair with nil, and then consed
+;; on as the second item in a pair with the newer item first. this builds up pairs
 ;; backwards.
 
-;; Interchanging the arguments will just create a list that starts will a nil but doesn't
+;; interchanging the arguments will just create a list that starts will a nil but doesn't
 ;; end with one, so the list will be malformed/improper. 
 
 ;; 23
@@ -503,7 +503,7 @@
   (cons length structure))
 
 ;; left-branch and branch-structure previously used (car (cdr)) because the structures
-;; included a final nil member. With pure cons cells they could be rewritten to just
+;; included a final nil member. with pure cons cells they could be rewritten to just
 ;; aliases of cdr.
 
 ;; --------------------------------------------------
@@ -555,8 +555,8 @@
       (let ((rest (subsets (cdr s))))
 	(append rest (map (lambda (x) (append (car s) x)) rest)))))
 	     
-;; This is a pretty simple idea. If S is a set and A is the set of all subsets
-;; of S, and S' is (S + x), then P(S') is just A + {a + x: a in A}. Because
+;; this is a pretty simple idea. if s is a set and a is the set of all subsets
+;; of s, and s' is (s + x), then p(s') is just a + {a + x: a in a}. because
 ;; adding a new element means every subset could potentially contain that element
 ;; and so if you already have a list of all old subsets a list of all subsets
 ;; containing the new element will just be those subsets plus the new element
@@ -659,7 +659,7 @@
 (fold-right list nil (list 1 2 3))	; (1 (2 (3 ())))
 (fold-left list nil (list 1 2 3))	; (((() 1) 2) 3)
 
-;; Commutativity
+;; commutativity
 
 ;; 39
 
@@ -675,7 +675,7 @@
   (accumulate append nil (map f seq)))
 
 (define (prime-sum? pair)
-  (prime? (+ (Car pair) (cadr pair))))
+  (prime? (+ (car pair) (cadr pair))))
 
 (define (make-pair-sum pair)
   (list (car par) (cadr pair) (+ (car pair) (cadr pair))))
@@ -787,10 +787,223 @@
 ;;           (queen-cols (- k 1))))))
 ;;   (queen-cols board-size))
 
-;; This causes queen-cols to be called with the same number once for every item in the
+;; this causes queen-cols to be called with the same number once for every item in the
 ;; interval, as opposed to the original which creates a new interval for every item in
-;; queen-cols. As creating the interval is a linear process it is much faster for it to
+;; queen-cols. as creating the interval is a linear process it is much faster for it to
 ;; be duplicated than for the entire recursive call to be called with the same arguments
 ;; many times. 
 
-;; If the original queens function takes time T to run 
+;; if the original queens function takes time t to run at size s, then rather than including
+;; s further calls to queen-cols (total), there will be s further calls, each of which
+;; will spawn (s-1) further calls, and so on. this results in s! further calls. if s calls took
+;; time t then s! calls should take t(s-1)! time.
+
+;; 44
+
+(define (right-split painter n)
+  (if (= n 0)
+      painter
+      (let ((smaller (right-split painter (- n 1))))
+        (beside painter (below smaller smaller)))))
+
+(define (up-split painter n)
+  (if (= n 0)
+      painter
+      (let ((smaller (up-split painter (- n 1))))
+        (below painter (beside smaller smaller)))))
+
+;; 45
+
+(define (split f1 f2)
+  (define (iter painter n)
+    (if (= n 0)
+        painter
+        (let ((smaller (iter painter (- n 1))))
+          (f1 painter (f2 smaller smaller)))))
+  iter)
+
+;; ----------------------------------------
+
+(define (frame-coord-map frame)
+  (lambda (v)
+    (add-vect
+     (origin-frame frame)
+     (add-vect (scale-vect (xcor-vect v) (edge1-frame frame))
+               (scale-vect (ycor-vect v) (edge2-frame frame))))))
+
+;; 46
+
+(define (make-vect x y)
+  (list x y))
+(define (xcor-vect v)
+  (car v))
+(define (ycor-vect v)
+  (cadr v))
+(define (add-vect v1 v2)
+  (map + v1 v2))
+(define (sub-vect v1 v2)
+  (map - v1 v2))
+(define (scale-vect s v)
+  (make-vect (* s (xcor-vect v))
+             (* s (ycor-vect v))))
+;; 47
+
+(define (make-frame origin edge1 edge2)
+  (list origin edge1 edge2))
+(define (origin-frame frame)
+  (car frame))
+(define (edge1-frame frame)
+  (cadr frame))
+(define (edge2-frame frame)
+  (caddr frame))
+
+(define (make-frame origin edge1 edge2)
+  (cons origin (cons edge1 edge2)))
+(define (edge2-frame frame)
+  (cddr frame))
+
+
+;; --------------------------------------------------
+
+(define (segments->painter segment-list)
+  (lambda (frame)
+    (for-each
+     (lambda (segment)
+       (draw-line
+        ((frame-coord-map frame)
+         (start-segment segment))
+        ((frame-coord-map frame)
+         (end-segment segment))))
+     segment-list)))
+
+;; 48
+
+(define (make-segment start end)
+  (list start end))
+(define (start-segment segment)
+  (car segment))
+(define (end-segment segment)
+  (cadr segment))
+
+;; 49
+
+(define outline-painter
+  (segments->painter
+   (list (make-segment (make-vect 0 0) (make-vect 0 1))
+         (make-segment (make-vect 0 1) (make-vect 1 1))
+         (make-segment (make-vect 1 1) (make-vect 1 0))
+         (make-segment (make-vect 1 0) (make-vect 0 0)))))
+
+(define x-painter
+  (segments->painter
+   (list (make-segment (make-vect 0 0) (make-vect 1 1))
+         (make-segment (make-vect 0 1) (make-vect 1 0)))))
+
+(define diamond-painter
+  (segments->painter
+   (list (make-segment (make-vect 0 0.5) (make-vect 0.5 1))
+         (make-segment (make-vect 0.5 1) (make-vect 1 0.5))
+         (make-segment (make-vect 1 0.5) (make-vect 0.5 0))
+         (make-segment (make-vect 0.5 0) (make-vect 0 0.5)))))
+
+;; how the fuck do i define wave?
+
+;; ----------------------------------------------------------------------
+
+(define (transform-painter painter origin corner1 corner2)
+  (lambda (frame)
+    (let ((m (frame-coord-map frame)))
+      (let ((new-origin (m origin)))
+        (painter (make-frame
+                  new-origin
+                  (sub-vect (m corner1) new-origin)
+                  (sub-vect (m corner2) new-origin)))))))
+
+
+(define (flip-vert painter)
+  (transform-painter painter
+                     (make-vect 0 1)
+                     (make-vect 1 1)
+                     (make-vect 0 0)))
+
+(define (shrink-to-upper-right painter)
+  (transform-painter painter
+                     (make-vect 0.5 0.5)
+                     (make-vect 0.5 1)
+                     (make-vect 1 0.5)))
+
+(define (rotate90 painter)
+  (transform-painter painter
+                     (make-vect 1 0)
+                     (make-vect 1 1)
+                     (make-vect 0 0)))
+
+(define (squash-inwards painter)
+  (transform-painter painter
+                     (make-vect 0 0)
+                     (make-vect 0.65 0.35)
+                     (make-vect 0.35 0.65)))
+
+(define (beside painter1 painter2)
+  (let ((split-point (make-vect 0.5 0)))
+    (let ((paint-left
+           (transform-painter
+            painter1
+            (make-vect 0 0)
+            split-point
+            (make-vect 0 1)))
+          (paint-right
+           (transform-painter
+            painter2
+            split-point
+            (make-vect 1 0)
+            (make-vect 0.5 1))))
+      (lambda (frame)
+        (paint-left frame)
+        (paint-right frame)))))
+
+;; 50
+
+(define (flip-horiz painter)
+  (transform-painter painter
+                     (make-vect 1 0)
+                     (make-vect 0 0)
+                     (make-vect 1 1)))
+
+(define (rotate180 painter)
+  (transform-painter painter
+                     (make-vect 1 1)
+                     (make-vect 0 1)
+                     (make-vect 1 0)))
+
+;; or
+
+(define (rotate180 painter)
+  (rotate90 (rotate90 painter)))
+
+(define (rotate270 painter)
+  (rotate90 (rotate180 painter)))
+
+;; 51
+
+(define (below painter1 painter2)
+  (let ((split-point (make-vect 0 0.5)))
+    (let ((paint-bottom
+           (transform-painter
+            painter1
+            (make-vect 0 0)
+            (make-vect 1 0)
+            split-point))
+          (paint-top
+           (transform-painter
+            painter2
+            split-point
+            (make-vect 0 1)
+            (make-vect 1 0.5))))
+      (lambda (frame)
+        (paint-bottom frame)
+        (paint-top frame)))))
+
+(define (below painter1 painter2)
+  (rotate90 (besides painter2 painter1)))
+
