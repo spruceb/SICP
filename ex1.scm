@@ -618,7 +618,7 @@
 	result
 	(iter (next a) (combine (term a) result))))
   (iter a initial))
-
+(define accumulate accumulate-iter)
 (define (sum-accum f a next b)
   (accumulate-iter + 0 f a next b))
 (define (product-accum f a next b)

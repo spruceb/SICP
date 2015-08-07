@@ -89,7 +89,7 @@
 		 (x-point (upper-left-corner rectangle)))
 	      (+ (height rectangle)
 		 (y-point (upper-left-corner rectangle)))))
-		 
+
 (define (perimeter rect)
   (+ (* 2 (width rect))
      (* 2 (height rect))))
@@ -178,7 +178,7 @@
 	(p3 (* (upper-bound x) (lower-bound y)))
 	(p4 (* (upper-bound x) (upper-bound y))))
     (make-interval (min p1 p2 p3 p4)
-		  (max p1 p2 p3 p4))))
+                   (max p1 p2 p3 p4))))
 
 (define (div-interval x y)
   (mul-interval
@@ -484,7 +484,7 @@
     (if (pair? struct)
 	(total-weight struct)
 	struct)))
-      
+
 (define (total-weight mobile)
   (+ (branch-weight (left-branch mobile))
      (branch-weight (right-branch mobile))))
@@ -538,7 +538,7 @@
 	     (square-tree sub-tree)
 	     (square sub-tree)))
        tree))
-  
+
 ;; 31
 
 (define (tree-map f tree)
@@ -554,7 +554,7 @@
       (list nil)
       (let ((rest (subsets (cdr s))))
 	(append rest (map (lambda (x) (append (car s) x)) rest)))))
-	     
+
 ;; this is a pretty simple idea. if s is a set and a is the set of all subsets
 ;; of s, and s' is (s + x), then p(s') is just a + {a + x: a in a}. because
 ;; adding a new element means every subset could potentially contain that element
@@ -566,7 +566,7 @@
 	((pred (car seq))
 	 (cons (car seq)
 	       (filter pred (cdr seq))))
-	 (else (filter pred (cdr seq))))))
+        (else (filter pred (cdr seq))))))
 (define (accumulate op init seq)
   (if (null? seq)
       init
@@ -768,8 +768,8 @@
        (or (same? (abs-sub checking x))
            (= (car (abs-sub checking x)) 0)))
      (remove-p pair-eq? checking positions))))
-  
-  
+
+
 ;; 43
 
 ;; (define (queens board-size)
@@ -1007,3 +1007,1398 @@
 (define (below painter1 painter2)
   (rotate90 (besides painter2 painter1)))
 
+;; 52
+
+;; a
+
+;; no way am i gonna do all that number-fiddlin', i'm here for the crystallin abstract shit
+
+;; b
+
+(define (corner-split painter n)
+  (if (= n 0)
+      painter
+      (let ((up (up-split painter (- n 1)))
+            (right (right-split painter (- n 1))))
+        (let ((top-left (beside up up))
+              (bottom-right (below right right))
+              (corner (corner-split painter (- n 1))))
+          (beside (below painter top-left)
+                  (below bottom-right corner))))))
+
+(define (corner-split painter n)
+  (if (= n 0)
+      painter
+      (let ((up (up-split painter (- n 1)))
+            (right (right-split painter (- n 1))))
+        (let ((top-left (beside up right))
+              (bottom-right (below right up))
+              (corner (corner-split painter (- n 1))))
+          (beside (below painter top-left)
+                  (below bottom-right corner))))))
+;; c
+
+(define (square-limit painter n)
+  (let ((combine4 (square-of-four identity flip-horiz
+                                  flip-vert rotate180)))
+    (combine4 (corner-split painter n))))
+;; --------------------------------------------------------------------------------
+
+(define (memq item x)
+  (cond ((null? x) #f)
+        ((eq? item (car x)) x)
+        (else (memq item (cdr x)))))
+
+;; 53
+
+;; (a b c)
+;; ((george))
+;; (y1 y2)
+;; y1
+;; #f
+;; #f
+;; (red shoes blue socks)
+
+;; 54
+
+(define (equal? a b)
+  (cond ((and (pair? a) (pair? b))
+         (and (equal? (car a) (car b))
+              (equal? (cdr a) (cdr b))))
+        ((not (or (pair? a) (pair? b)))
+         (eq? a b))
+        (else #f)))
+
+;; 55
+
+;; (car ''abracadabra) is equivilent to (car (quote (quote abracadabra))), or
+;; (car (quote abracadabra)), so it of course evaluates to 'quote.
+
+(define (deriv exp var)
+  (cond ((number? exp) 0)
+        ((variable? exp) (if (same-variable? exp var) 1 0))
+        ((sum? exp) (make-sum (deriv (addend exp) var)
+                              (deriv (augend exp) var)))
+        ((product? exp)
+         (make-sum
+          (make-product (multiplier exp)
+                        (deriv (multiplicand exp) var))
+          (make-product (multiplicand exp)
+                        (deriv (multiplier exp) var))))
+        (else
+         (error "unknown expression type: " exp))))
+
+(define (variable? x) (symbol? x))
+(define (same-variable? v1 v2)
+  (and (variable? v1) (variable? v2) (eq? v1 v2)))
+(define (make-sum a1 a2)
+  (list '+ a1 a2))
+(define (make-product m1 m2)
+  (list '* m1 m2))
+(define (sum? x)
+  (and (pair? x) (eq? (car x) '+)))
+(define (addend s) (cadr s))
+(define (augend s) (caddr s))
+(define (product? x) (and (pair? x) (eq? (car x) '*)))
+(define (multiplier p) (cadr p))
+(define (multiplicand p) (caddr p))
+
+(define (make-sum a1 a2)
+  (cond ((=number? a1 0) a2)
+        ((=number? a2 0) a1)
+        ((and (number? a1) (number? a2))
+         (+ a1 a2))
+        (else (list '+ a1 a2))))
+
+(define (=number? exp num) (and (number? exp) (= exp num)))
+
+(define (make-product m1 m2)
+  (cond ((or (=number? m1 0) (=number? m2 0)) 0)
+        ((=number? m1 1) m2)
+        ((=number? m2 1) m1)
+        ((and (number? m1) (number? m2) (* m1 m2)))
+        (else (list '* m1 m2))))
+
+;; 56
+
+(define (deriv exp var)
+  (cond ((number? exp) 0)
+        ((variable? exp) (if (same-variable? exp var) 1 0))
+        ((sum? exp) (make-sum (deriv (addend exp) var)
+                              (deriv (augend exp) var)))
+        ((product? exp)
+         (make-sum
+          (make-product (multiplier exp)
+                        (deriv (multiplicand exp) var))
+          (make-product (multiplicand exp)
+                        (deriv (multiplier exp) var))))
+        ((exponentiation? exp)
+         (make-product (exponent exp)
+                       (make-product
+                        (make-exponentiation (base exp) (make-sum (exponent exp) -1))
+                        (deriv (base exp) var))))
+        (else
+         (error "unknown expression type: " exp))))
+
+(define (make-exponentiation base exponent)
+  (cond ((=number? exponent 0) 1)
+        ((=number? exponent 1) base)
+        ((and (number? base) (number? exponent)) (expt base exponent))
+        (else (list '** base exponent))))
+(define (exponentiation? exp)
+  (eq? (car exp) '**))
+(define (base exp)
+  (cadr exp))
+(define (exponent exp)
+  (caddr exp))
+
+;; 57
+
+(define (addend s) (cadr s))
+(define (augend s) (apply make-sum (cddr s)))
+(define (multiplier p) (cadr p))
+(define (multiplicand p) (apply make-product (cddr p)))
+
+(define (make-sum . s)
+  (let ((numbers (filter number? s))
+        (exps (filter (lambda (x) (not (number? x))) s)))
+    (let* ((sum (accumulate + 0 numbers))
+           (final (if (= 0 sum)
+                      exps
+                      (append exps (list sum)))))
+      (if (= (length final) 1)
+          (car final)
+          (append (list '+) final)))))
+(define (=number? exp num) (and (number? exp) (= exp num)))
+
+(define (make-product . s)
+  (let ((numbers (filter number? s))
+        (exps (filter (lambda (x) (not (number? x))) s)))
+    (let* ((prod (accumulate * 1 numbers))
+           (final (if (= prod 1)
+                      exps
+                      (append exps (list prod)))))
+      (if (= prod 0)
+          0
+          (if (= (length final) 1)
+              (car final)
+              (append (list '*) final))))))
+
+;; 58
+
+;; a
+
+(define (make-sum a b)
+  (cond ((and (number? a) (number? b)) (+ a b))
+        ((=number? a 0) b)
+        ((=number? b 0) a)
+        (else (list a '+ b))))
+(define (addend s)
+  (car s))
+(define (augend s)
+  (caddr s))
+
+(define (sum? s)
+  (eq? (cadr s) '+))
+
+(define (make-product a b)
+  (cond ((and (number? a) (number? b)) (* a b))
+        ((=number? a 1) b)
+        ((=number? b 1) a)
+        ((or (=number? a 0) (=number? b 0)) 0)
+        (else (list a '* b))))
+(define (multiplier s)
+  (car s))
+(define (multiplicand s)
+  (caddr s))
+(define (product? s)
+  (eq? (cadr s) '*))
+
+;; b
+
+;; shit
+
+;; ------------------------------------------------------------
+
+(define (element-of-set? x set)
+  (cond ((null? set) false)
+        ((equal? x (car set)) true)
+        (else (element-of-set? x (cdr set)))))
+(define (adjoin-set x set)
+  (if (element-of-set? x set)
+      set
+      (cons x set)))
+(define (intersection-set set1 set2)
+  (cond ((or (null? set1) (null? set2)) '())
+        ((element-of-set? (car set1) set2)
+         (cons (car set1) (intersection-set (cdr set1) set2)))
+        (else (intersection-set (cdr set1) set2))))
+
+;; 59
+
+(define (union-set set1 set2)
+  (cond ((null? set1) set2)
+        ((element-of-set? (car set1) set2)
+         (union-set (cdr set1) set2))
+        (else (adjoin-set (car set1) (union-set (cdr set1) set2)))))
+
+;; 60
+
+(define (element-of-set? x set)
+  (cond ((null? set) false)
+        ((equal? x (car set)) true)
+        (else (element-of-set? x (cdr set)))))
+
+(define (adjoin-set x set)
+  (cons x set))
+
+(define (union-set set1 set2)
+  (append set1 set2))
+
+;; element-of-set? will take the same (or less) time. adjoin-set no longer has to
+;; check for membership, and neither does union-set. intersection stays exactly
+;; the same, but will be slower on this implementation as it will have to check multiple
+;; of the same element.
+
+;; so this should be used if you're doing a lot of unions and adjoins
+
+;; --------------------------------------------------
+
+(define (element-of-set? x set)
+  (cond ((null? set) false)
+        ((= x (car set)) true)
+        ((< x (car set)) false)
+        (else (element-of-set? x (cdr set)))))
+
+(define (intersection-set set1 set2)
+  (id (or (null? set1) (null? set2))
+      '()
+      (let ((x1 (car set1)) (x2 (car set2)))
+        (cond ((= x1 x2)
+               (cons x1 (intersection-set (cdr set)
+                                          (cdr set2))))
+              ((< x1 x2)
+               (intersection-set (cdr set1) set2))
+              ((<x2 x1)
+               (intersection-set set1 (cdr set2)))))))
+
+;; 61
+
+(define (adjoin-set x set)
+  (cond ((null? set) (list x))
+        ((= x (car set)) set)
+        ((< x (car set))
+         (cons x set))
+        ((> x (car set))
+         (cons (car set) (adjoin-set x (cdr set))))))
+
+;; 62
+
+(define (union-set set1 set2)
+  (if (or (null? set1) (null? set2))
+      (append set1 set2)
+      (let ((x1 (car set1)) (x2 (car set2)))
+        (cond 
+         ((= x1 x2)
+          (cons x1 (union-set (cdr set1) (cdr set2))))
+         ((< x1 x2)
+          (cons x1 (union-set (cdr set1) set2)))
+         ((> x1 x2)
+          (cons x2 (union-set set1 (cdr set2))))))))
+
+;; ------------------------------------------------------------
+
+(define (entry tree) (car tree ))
+(define (left-branch tree) (cadr tree))
+(define (right-branch tree) (caddr tree))
+(define (make-tree entry left right)
+  (list entry left right))
+
+(define (element-of-set? x set)
+  (cond ((null? set) false)
+        ((= x (entry set)) true)
+        ((> x (entry set
+         (element-of-set? x (right-branch set)))
+        ((< x (entry set))
+         (element-of-set? x (left-branch set)))))))
+(define (adjoin-set x set)
+  (cond ((null? set) (make-tree x '() '()))
+        ((= x (entry set)) set)
+        ((< x (entry set))
+         (make-tree (entry set)
+                    (adjoin-set x (left-branch set))
+                    (right-branch set)))
+        ((> x (entry set))
+         (make-tree (entry set) (left-branch set)
+                    (adjoin-set x (right-branch set))))))
+
+;; 63
+
+(define (tree->list-1 tree)
+  (if (null? tree)
+      '()
+      (append (tree->list-1 (left-branch tree))
+              (cons (entry tree)
+                    (tree->list-1
+                     (right-branch tree))))))
+
+(define (tree->list-2 tree)
+  (define (copy-to-list tree result-list)
+    (if (null? tree)
+        result-list
+        (copy-to-list (left-branch tree)
+                      (cons (entry tree)
+                            (copy-to-list
+                             (right-branch tree)
+                             result-list)))))
+  (copy-to-list tree '()))
+
+;; a
+
+;; no, tree->list-1 produces lists of trees with the flattened left branch first, followed
+;; by entry and right branch, whereas tree->list-2 procudes lists with the entry and right
+;; branch first.
+;; (1 2 3 4 5 6 7)
+;; (1 2 3 4 5 6 7)
+
+;; b
+
+;; the first function appends the left branch to the combination of the entry and the right
+;; branch. since the tree is assumed to be balanced the total time is twice the time the
+;; function would take for a tree with half the elements (the branches) plus the time taken
+;; for the append of the half-sized list (linear).
+
+;; so t(n) = 2t(n/2) + n/2
+;; t(n) = 2 (2 t(n/4) + n/4) + n/2
+;; t(n) = 2 (2 (2 t(n/8) + n / 8) + n/4) + n/2
+;; t(n) = 2(4t(n/8) + n/4 + n/4) + n/2
+;; t(n) = 8t(n/8) + n/2 + n/2 + n/2
+;; ...
+;; t(n) = 2^k*t(n/2^k) + k*(n/2)
+;; since n is the number of leaves in a balanced binary tree we can assume it is of the
+;; form 2^m. thus we can assume that log(n) = m \in \mathbf{n}. so if we let k = log(n):
+;; t(n) = 2^log(n) * t(n/2^log(n)) + log(n)*(n/2)
+;; t(n) = n * t(1) + 1/2 * nlog(n)
+;; t(1) is a constant, as is 1/2, so both can be ignored for the purpose of big-oh
+;; t(n) = n + n*log(n)
+;; and nlogn dominates, so tree->list-1 \in o(n*log(n))
+
+;; whereas the second function has t(n) = 2t(n/2) + c
+;; or t(n) = 2(2t(n/4) + c) + c = 2(2(2t(n/8) + c) + c) + c = 8t(n/8) + 7c
+;; so t(n) = 2^kt(n/2^k) + (2^k - 1)c, so if k=log(n):
+;; t(n) = n*t(1) + nc - c = n(t(1) + c) - c, and so the constants are ingored
+;; and t(n) = o(n)
+;; so the second procedure has slower growth.
+
+;; 64
+
+(define (list->tree elements)
+  (car (partial-tree elements (length elements))))
+(define (partial-tree elts n)
+  (if (= n 0)
+      (cons '() elts)
+      (let ((left-size (quotient (- n 1) 2)))
+        (let ((left-result
+               (partial-tree elts left-size)))
+          (let ((left-tree (car left-result))
+                (non-left-elts (cdr left-result))
+                (right-size (- n (+ left-size 1))))
+            (let ((this-entry (car non-left-elts))
+                  (right-result
+                   (partial-tree
+                    (cdr non-left-elts)
+                    right-size)))
+              (let ((right-tree (car right-result))
+                    (remaining-elts
+                     (cdr right-result)))
+                (cons (make-tree this-entry
+                                 left-tree
+                                 right-tree)
+                      remaining-elts))))))))
+;; a
+;; partial tree works by first by finding an integer that is 1 or 2 less than half n
+;; then it finds the partial tree based on that length
+;; but since this works by producing a tree followed by the unused elements the
+;; actual tree is the car of this result
+;; and the list of remaining elements is the cdr
+;; so if the left tree is the first half-ish of the list then the size of the right tree is
+;; the total size minus the left size (minus 1 because of the entry)
+;; and the entry (or root) is the first item of the non-lefts
+;; (since th elts are ordered the first left-size are all less than the entry, and all
+;; after are greater)
+;; and the "right result" is the rest of the non-lefts partial-treed
+;; and the final result is the tree with the entry as the entry, then the left tree, then the right
+;; of course consed to any remaining elements
+;; this algorithm bottoms out with a list of 3, which gives a left size of 1
+
+;; the tree should be:
+
+;; length of list is 6
+;; left-length is 2
+;; entry is 5
+;; right-size is 3
+;;
+;;    5
+
+;; legth of left side is 2
+;; left-length is 0
+;; left branch is nil
+;; entry is 1
+;; right branch is 3
+
+;;   5
+;;  / \
+;; 1
+;;  \
+;;   3
+
+;; len of right side is 3
+;; left-length is 1
+;; entry is 9
+;; right-length is 1
+
+;;       5
+;;      / \
+;;     1   9
+;;      \
+;;       3
+
+;; nil on right and left
+;; so final is:
+
+
+;;       5
+;;     /   \
+;;    1     9
+;;     \   / \
+;;      3 7  11
+
+;; b
+
+;; t(n) = t(n/2) + t(n/2) = 2*t(n/2) = o(n) for proper lists (see "proofs" above)
+
+;; 65
+
+;; seems like the easiest way is to convert the tree to a list, union/intersection with the
+;; old algorithms, then convert back, for 3*o(n) = o(n).
+
+;; so:
+
+(define (tree-union-set set1 set2)
+  (list->tree
+   (union-set (tree->list-2 set1) (tree->list-2 set2))))
+
+(define (tree-intersection-set set1 set2)
+  (list->tree
+   (intersection-set (tree->list-2 set1) (tree->list-2 set2))))
+
+;; 66
+
+(define (lookup given-key set-of-records)
+  (cond ((null? set-of-records) false)
+        ((= given-key (key (car set-of-records)))
+         (car set-of-records))
+        ((> given-key (key (car set-of-records)))
+         (lookup given-key (right-branch set-of-records)))
+        ((< given-key (key (car set-of-records)))
+         (lookup given-key (left-branch set-of-records)))))
+
+;; ----------------------------------------------------------------------
+
+(define (make-leaf symbol weight) (list 'leaf symbol weight))
+(define (leaf? obj) (eq? (car obj) 'leaf))
+(define (symbol-leaf x) (cadr x))
+(define (weight-leaf x) (caddr x))
+
+(define (make-code-tree left right)
+  (list left
+        right
+        (append (symbols left) (symbols right))
+        (+ (weight left) (weight right))))
+
+(define (left-branch tree) (car tree))
+(define (right-branch tree) (cadr tree))
+(define (symbols tree)
+  (if (leaf? tree)
+      (list (symbol-leaf tree))
+      (caddr tree)))
+(define (weight tree)
+  (if (leaf? tree)
+      (weight-leaf tree)
+      (cadddr tree)))
+
+(define (decode bits tree)
+  (define (decode-1 bits current-branch)
+     (if (null? bits)
+        '()
+        (let ((next-branch
+               (choose-branch (car bits) current-branch)))
+          (if (leaf? next-branch)
+              (cons (symbol-leaf next-branch)
+                    (decode-1 (cdr bits) tree))
+              (decode-1 (cdr bits) next-branch)))))
+  (decode-1 bits tree))
+(define (choose-branch bit branch)
+  (cond ((= bit 0) (left-branch branch))
+        ((= bit 1) (right-branch branch))
+        (else (error "bad bit: choose-branch" bit))))
+
+(define (adjoin-set x set)
+  (cond ((null? set) (list x))
+        ((< (weight x) (weight (car set))) (cons x set))
+        (else (cons (car set)
+                    (adjoin-set x (cdr set))))))
+
+(define (make-leaf-set pairs)
+  (if (null? pairs)
+      '()
+      (let ((pair (car pairs)))
+        (adjoin-set (make-leaf (car pair)
+                               (cadr pair))
+                    (make-leaf-set (cdr pairs))))))
+
+;; 67
+
+(define sample-tree
+  (make-code-tree (make-leaf 'a 4)
+                  (make-code-tree
+                   (make-leaf 'b 2)
+                   (make-code-tree
+                    (make-leaf 'd 1)
+                    (make-leaf 'c 1)))))
+(define sample-message '(0 1 1 0 0 1 0 1 0 1 1 1 0))
+
+
+;; (a d a b b c a)
+
+;; 68
+
+(define (encode message tree)
+  (if (null? message)
+      '()
+      (append (encode-symbol (car message) tree)
+              (encode (cdr message) tree))))
+
+(define (element-of-list? x set)
+  (cond ((null? set) false)
+        ((equal? x (car set)) true)
+        (else (element-of-list? x (cdr set)))))
+
+(define (encode-symbol symbol tree)
+  (cond ((leaf? tree) '())
+        ((element-of-list? symbol (symbols (left-branch tree)))
+         (cons 0 (encode-symbol symbol (left-branch tree))))
+        ((element-of-list? symbol (symbols (right-branch tree)))
+         (cons 1 (encode-symbol symbol (right-branch tree))))
+        (else (error "symbol not in tree" symbol))))
+
+;; this does encode to the correct message.
+
+;; 69
+
+(define (generate-huffman-tree pairs)
+  (successive-merge (make-leaf-set pairs)))
+
+(define (successive-merge leaf-set)
+  (cond ((= (length leaf-set) 1) leaf-set)
+        ((= (length leaf-set) 2)
+         (make-code-tree (car leaf-set) (cadr leaf-set)))
+        (else (successive-merge (adjoin-set
+                                 (make-code-tree
+                                  (car leaf-set) (cadr leaf-set))
+                                 (cddr leaf-set))))))
+
+;; 70
+
+(define 1950s-tree (generate-huffman-tree
+                    '((a 2) (get 2) (sha 3) (wah 1)
+                      (boom 1) (job 2) (na 16) (yip 9))))
+(define 1950-message
+  '(get a job sha na na na na na na na na
+        get a job sha na na na na na na na na
+        wah yip yip yip yip yip yip yip yip yip
+        sha boom))
+
+;; encodes to a total of 84 bits. if this were a fixed length encoding, with 8 symbols
+;; we would need 3 bits per symbol. the length of the message is 36. so we would need
+;; 3*36 = 108 bits to encode the message.
+
+;; 71
+
+;; n = 5:
+;; (1 2 4 8 16)
+;; combine lowest two:
+;; ((1 2 3) 4 8 16)
+;; (((1 2 3) 4 7) 8 16)
+;; ...
+;;   .
+;;  / \
+;; 16  .
+;;    / \
+;;   8   .
+;;      / \
+;;     4   .
+;;        / \
+;;       2   1
+
+;; same for any higher numbers. 1 bit will be required for the most frequent number and
+;; n-1 bits for the least. this is because the sum of 2^i for i from 0 to k is 2^{k+1} -1
+;; and so will always be less than the next one.
+
+;; 72
+
+;; with the encoding tree from 71 we have t(n) of encoding the most frequent as:
+;; o(n) (element-of-list? on left) + o(1) (element of list on right, list is length
+;; 1 and so time is constant) + c (a constant based on the checking of whether a list
+;; is a leaf and the consing of nil). so total of o(n).
+
+;; for the least frequent we have:
+;; t(n) = t(n-1) + n + c (the rest of the tree, the element-of-list? and the checking the leaf)
+;; t(n) = (t(n-2) + (n - 1) + c) + n + c
+;; t(n) = ((t(n-2) + (n-2) + c) + (n-1) + c) + n + c
+;; t(n) = t(n-k) + (k+1)(n+c) - (k(k+1)/2)
+;; so if k = n-1:
+;; t(n) = t(1) + (n-1+1)(n+c) - ((n-1)(n-1+2))/2
+;; t(n) = t(1) + n^2 + nc - (n-1)n/2
+;; t(n) = t(1) + n^2 + nc -(n^2 - n)/2
+;; n^2 dominates here, so t(n) is o(n^2)
+
+;; --------------------------------------------------------------------------------
+
+(define (attach-tag type-tag contents)
+  (cons type-tag contents))
+(define (type-tag datum)
+  (if (pair? datum)
+      (car datum)
+      (error "bad tagged datum: type-tag" datum)))
+(define (contents datum)
+  (if (pair? datum)
+      (cdr datum)
+      (error "bad tagged datum: contents" datum)))
+
+(define (rectangular? z)
+  (eq? (type-tag z) 'rectangular))
+(define (polar? z)
+  (eq? (type-tag z) 'polar))
+
+(define (real-part-rectangular z) (car z))
+(define (imag-part-rectangular z) (cdr z))
+(define (magnitude-rectangular z)
+  (sqrt (+ (square (real-part-rectangular z))
+           (square (imag-part-rectangular z)))))
+(define (angle-rectangular z)
+  (atan (imag-part-rectangular z)
+        (real-part-rectangular z)))
+(define (make-from-real-imag-rectangular x y)
+  (attach-tag 'rectangular (cons x y)))
+(define (make-from-mag-ang-rectangular r a)
+  (attach-tag 'rectangular
+              (cons (* r (cos a)) (* r (sin a)))))
+
+(define (real-part-polar z)
+  (* (magnitude-polar z) (cos (angle-polar z))))
+(define (imag-part-polar z)
+  (* (magnitude-polar z) (sin (angle-polar z))))
+(define (magnitude-polar z) (car z))
+(define (angle-polar z) (cdr z))
+(define (make-from-real-imag-polar x y)
+  (attach-tag 'polar
+              (cons (sqrt (+ (square x) (square y)))
+                    (atan y x))))
+(define (make-from-mag-ang-polar r a)
+  (attach-tag 'polar (cons r a)))
+
+(define (real-part z)
+  (cond ((rectangular? z)
+         (real-part-rectangular (contents z)))
+        ((polar? z)
+         (real-part-polar (contents z)))
+        (else (error "unknown type: real-part" z))))
+
+(define (imag-part z)
+  (cond ((rectangular? z)
+         (imag-part-rectangular (contents z)))
+        ((polar? z)
+         (imag-part-polar (contents z)))
+        (else (error "unknown type: imag-part" z))))
+
+(define (magnitude z)
+  (cond ((rectangular? z)
+         (magnitude-rectangular (contents z)))
+        ((polar? z)
+         (magnitude-polar (contents z)))
+        (else (error "unknown type: magnitude" z))))
+
+(define (angle z)
+  (cond ((rectangular? z)
+         (angle-rectangular (contents z)))
+        ((polar? z)
+         (angle-polar (contents z)))
+        (else (error "unknown type: angle" z))))
+
+(define (make-from-real-imag x y)
+  (make-from-real-imag-rectangular x y))
+(define (make-from-mag-ang r a)
+  (make-from-mag-ang-polar r a))
+
+
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (apply proc (map contents args))
+          (error
+           "no method for these types: apply-generic"
+           (list op type-tags))))))
+
+(define (deriv exp var)
+  (cond ((number? exp 0)
+         ((variable? exp) (if (same-variable? exp var) 1 0))
+         (else ((get 'deriv (operator exp))
+                (operands exp) var)))))
+(define (operator exp) (car exp))
+(define (operands exp) (cdr exp))
+
+;; 73
+;; a
+;; because if exp is a number or a variable (a symbol) then it won't have a car
+;; or cdr, and thus operator and operands won't work
+
+;; b
+(define (deriv-sum exp var)
+  (make-sum (list (multiplier exp)
+                       (deriv (multiplicand exp) var))))
+(put 'deriv '(+) deriv-sum)
+(define (deriv-prod exp var)
+  (make-sum
+   (make-product (multiplier exp)
+                 (deriv (multiplicand exp) var))
+   (make-product (multiplicand exp)
+                 (deriv (multiplier exp) var))))
+(put 'deriv '(*) deriv-prod)
+;; c
+(define (deriv-exponent exp var)
+  (make-product (exponent exp)
+                       (make-product
+                        (make-exponentiation (base exp) (make-sum (exponent exp) -1))
+                        (deriv (base exp) var))))
+(put 'deriv '(**) deriv-exponent)
+;; d
+;; presumably the (put) lines would have to be rewritten to transpose the op and type
+
+;; 74
+
+;; a
+(define (get-record employee file)
+  ((get 'get-record (type-tag file)) employee file))
+;; this will work so long as each file has a type tag (so has a type as its car)
+;; and a specific procedure for retriving the data from the file.
+
+;; b
+
+(define (get-salary employee file)
+  ((get 'get-salary file) employee))
+
+;; c
+
+(define (find-employee-record divisions employee)
+  (car (map (lambda (x) (get-record employee x)) divisions)))
+
+;; d
+
+;; the procedures in use for getting records must be added to the table with put
+
+;; --------------------------------------------------------------------------------
+
+;; 75
+
+(define (make-from-mag-ang r a)
+  (define (dispatch op)
+    (cond ((eq? op 'magnitude) r)
+          ((eq? op 'angle) a)
+          ((eq? op 'real-part)
+           (* r (cos a)))
+          ((eq? op 'imag-part)
+           (* r (sin a)))
+          (else (error "unkonw op: " op))))
+  dispatch)
+
+;; 76
+
+;; for explicit dispatch, the generic function will have to be modified for each new
+;; data structure added.
+
+;; for data-directed, each new function/data type will require a single put call.
+
+;; for message passing a new function will require modification of the original object
+;; constructor.
+;; a new data object will require a whole new representation.
+
+
+;; ----------------------------------------------------------------------
+
+(define (add x y) (apply-generic 'add x y))
+(define (sub x y) (apply-generic 'sub x y))
+(define (mul x y) (apply-generic 'mul x y))
+(define (div x y) (apply-generic 'div x y))
+
+(define (install-scheme-number-package)
+  (define (tag x) (attach-tag 'scheme-number x))
+  (put 'add '(scheme-number scheme-number)
+       (lambda (x y) (tag (+ x y))))
+  (put 'sub '(scheme-number scheme-number)
+       (lambda (x y) (tag (- x y))))
+  (put 'mul '(scheme-number scheme-number)
+       (lambda (x y) (tag (* x y))))
+  (put 'div '(scheme-number scheme-number)
+       (lambda (x y) (tag (/ x y))))
+  (put 'make 'scheme-number (lambda (x) (tag x)))
+  'done)
+(define (make-scheme-number n)
+  ((get 'make 'scheme-number) n))
+
+(define (install-rational-package)
+  (define (make-rat n d)
+    (let* ((g (gcd n  d))
+           (n (/ n g))
+           (d (/ d g)))
+      (if (negative? d)
+          (cons (- n) (- d))
+          (cons n d))))
+  (define (numer rat) (car rat))
+  (define (denom rat) (cdr rat))
+  (define (add-rat x y)
+    (make-rat (+ (* (numer x) (denom y))
+                 (* (numer y) (denom x)))
+              (* (denom x) (denom y))))
+  (define (sub-rat x y)
+    (make-rat (- (* (numer x) (denom y))
+                 (* (numer y) (denom x)))
+              (* (denom x) (denom y))))
+  (define (mul-rat x y)
+    (make-rat (* (numer x) (numer y))
+              (* (denom x) (denom y))))
+  (define (div-rat x y)
+    (make-rat (* (numer x) (denom y))
+              (* (denom x) (numer y))))
+
+  (define (tag x) (attach-tag 'rational x))
+  (put 'add '(rational rational)
+       (lambda (x y) (tag (add-rat x y))))
+  (put 'sub '(rational rational)
+       (lambda (x y) (tag (sub-rat x y))))
+  
+  (put 'mul '(rational rational)
+       (lambda (x y) (tag (mul-rat x y))))
+  
+  (put 'div '(rational rational)
+       (lambda (x y) (tag (div-rat x y))))
+  (put 'make 'rational
+       (lambda (n d) (tag (make-rat n d))))
+  'done)
+
+(define (make-rational n d)
+  (get 'make 'rational) n d)
+
+;; 77
+
+;; apply-generic takes an object and a tag and finds the appropriate function.
+;; so applying it to x will give a call to get complex and magnitude as arguments.
+;; since complex is not in the table this is an error. however with those added puts
+;; it will first take in x, look for its associated function, find the same function
+;; as the result, and pass x with the type tag stripped to that function.
+
+;; so apply-generic will be called once to strip the complex tag, once more to strip the
+;; rectangular tag, for a total of two times, at which point magnitude-rectangular is called
+
+;; 78
+
+(define (attach-tag tag object)
+  (if (number? object)
+      (object)
+      (cons tag object)))
+(define (type-tag object)
+  (if (number? object)
+      'scheme-number
+      (car object)))
+(define (contents object)
+  (if (number? object)
+      object
+      (cdr object)))
+
+;; 79
+
+(define (equ? n1 n2)
+  ((get 'equ? (list (type-tag n1) (type-tag n2))) n1 n2))
+(put 'equ? '(scheme-number scheme-number) =)
+(put 'equ? '(rational rational) equal-rat?)
+(put 'equ? '(complex complex)
+     (lambda (x y) (and (= (real-part x) (real-part y))
+                        (= (imag-part x) (imag-part y)))))
+
+;; 80
+(define (=zero? n)
+  (apply-generic '=zero? n))
+
+(put '=zero? '(scheme-number) zero?)
+(put '=zero? '(rational)
+     (lambda (x) (= (numer x) 0)))
+(put '=zero? '(complex)
+     (lambda (x)
+       (= 0 (real-part x) (imag-part x))))
+
+;; ----------------------------------------------------------------------
+(define (put . a) nil)
+;; ----------------------------------------------------------------------
+
+(define (scheme-number->complex n)
+  (make-complex-from-real-imag (contents n) 0))
+
+;; 81
+
+;; a
+
+;; we'll enter an infinite loop. apply-generic wont' find a function that works on
+;; the complex types and so finds functions that convert the first type to the
+;; second and the second to the first. since functions are found for both
+;; (just the identity type function) it will then apply-generic again with
+;; the first type converted. since this doesn't actually change anything this process will
+;; repeat forever
+
+;; b
+
+;; no, there is no need to change anything. the current function will raise a method not
+;; found error if no conversion methods are found for the given types, which is the desired
+;; behaviour if there is no function that works on those types.
+
+;; c
+
+;; just add a check and another error
+
+;; 82
+
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (define (no-method) (error "no method for these types"
+                               (list op type-tags)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (apply proc (map contents args))
+          (if (= (length args) 2)
+              (let ((type1 (car type-tags))
+                    (type2 (cadr type-tags))
+                    (a1 (car args))
+                    (a2 (cadr args)))
+                (let ((t1->t2 (get-coercion type1 type2))
+                      (t2->t1) (get-coercion type2 type1))
+                  (cond (t1->t2
+                         (apply-generic op (t1->t2 a1) a2))
+                        (t2->t1
+                         (apply-generic op a1 (t2->t1 a2)))
+                        (else (no-method)))))
+              (no-method))))))
+
+;; that stratagy won't work if there are multiple arguments of types that can't be
+;; coerced to each other, ie if a function formats a number according to a format string
+;; then coercing a natural up to a rational would be fine but coercing the string to a
+;; rational would fail.
+
+;; (define (all-pairs l)
+;;   )
+
+;; (define (apply-generic op . args)
+;;   (let ((type-tags (map type-tag args)))
+;;     (define (no-method) (error "no method for these types"
+;;                                (list op type-tags)))
+;;     (let ((proc (get op type-tags)))
+;;       (if proc
+;;           (apply proc (map contents args))
+;;           (let ((conversions ())))
+
+;; come back
+
+;; 83
+
+(define (install-raise)
+  (define (raise-scheme-number n)
+    (make-rational n 1))
+  (put 'raise '(integer) raise-scheme-number)
+  (define (raise-rational-number n)
+    (/ (numer n) (denom n)))
+  (put 'raise '(rational) raise-rational-number)
+  (define (raise-real-number n)
+    (make-complex-from-real-imag n 0))
+  (put 'raise '(real) raise-real-number))
+(define (raise n)
+    (apply-generic 'raise n))
+
+;; 84
+(define (type-eq? . args)
+  (accumulate (lambda (x y) (if (eq? (type-tag (car args)) x) y #f)) #t args))
+(define (type-higher? a b)
+  (if (type-eq? a b)
+      false
+      (let ((raise-a (get 'raise (list (type-tag a)))))
+        (if (raise-a)
+            (type-higher? (raise-a) b)
+            true))))
+(define (type-highest args)
+  (accumulate (lambda (a b) (if (type-higher? a b) a b)) 0 args))
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (define (no-method) (error "no method for these types"
+                               (list op type-tags)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (apply proc (map contents args))
+          (let ((highest-type (type-highest args)))
+            (if (apply type-eq? type-tags)
+                (no-method)
+                (apply
+                 apply-generic
+                 (cons op
+                       (map
+                        (lambda (x)
+                          (if (type-eq? x highest-type)
+                              x (raise x)))
+                        args)))))))))
+;; 85
+(define (install-project-package)
+  (define (project-complex x)
+    (real x))
+  (put 'project 'complex project-complex)
+  (define (project-real x)
+    (make-rational
+     (round (* x 100000))
+     100000))
+  (put 'project 'real project-real)
+  (define (project-rational x)
+    (round (/ (numer x) (denom x))))
+  (put 'project 'rational project-rational))
+(define (project x)
+  (apply-generic 'project x))
+(define (drop x)
+  (let ((proj (get 'project (list (type-tag x)))))
+    (if (proj)
+        (let ((dropped (proj x)))
+          (if (equ? (raise dropped) x)
+              (drop x)
+              x))
+        x)))
+
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (define (no-method) (error "no method for these types"
+                               (list op type-tags)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (drop (apply proc (map contents args)))
+          (let ((highest-type (type-highest args)))
+            (if (apply type-eq? type-tags)
+                (no-method)
+                (drop (apply
+                 apply-generic
+                 (cons op
+                       (map
+                        (lambda (x)
+                          (if (type-eq? x highest-type)
+                              x (raise x)))
+                        args))))))))))
+;; 86
+
+;; come back
+
+;; ----------------------------------------------------------------------
+
+
+
+
+
+
+(define (install-polynomial-package)
+  (define (make-poly variable term-list) (cons variable term-list))
+  (define (variable p) (car p))
+  (define (term-list p) (cdr p))
+
+  (define (add-poly p1 p2)
+  (if (same-variable? (variable p1) (variable p2))
+      (make-poly (variable p1)
+                 (add-terms (term-list p1) (term-list p2)))
+      (error "polys not in same var: add-poly" (list p1 p2))))
+  (define (mul-poly p1 p2)
+  (if (same-variable? (variable p1) (variable p2))
+      (make-poly (variable p1)
+                 (mul-terms (term-list p1) (term-list p2)))
+      (error "polys not in same var: mul-poly" (list p1 p2))))
+  (define (tag p) (attach-tag 'polynomial p))
+  (put 'add '(polynomial polynomial)
+       (lambda (p1 p2) (tag (add-poly p1 p2))))
+  (put 'mul '(polynomial polynomial))
+  (put 'make 'polynomial
+       (lambda (var terms) (tag (make-poly var terms))))
+  'done)
+
+(define (add-terms l1 l2)
+  (cond ((empty-termlist? l1) l2)
+        ((empty-termlist? l2) l1)
+b        (else
+         (let ((t1 (first-term l1))
+               (t2 (first-term l2)))
+           (cond ((> (order t1) (order t2))
+                  (adjoin-term
+                   t1 (add-terms (rest-terms l1) l2)))
+                 ((< (order t1) (order t2))
+                  (adjoin-term
+                   t2 (add-terms l1 (rest-terms l2))))
+                 (else
+                  (adjoin-term
+                   (make-term (order t1)
+                              (add (coeff t1) (coeff t2)))
+                   (add-terms (rest-terms l1)
+                              (rest-tersm l2)))))))))
+(define (mul-terms l1 l2)
+  (if (empty-termlist? l1)
+      (the-empty-termlist)
+      (add-terms (mul-term-by-all-terms (first-term l1) l2)
+                 (mul-terms (rest-terms l1) l2))))
+(define (mul-term-by-all-terms t1 l)
+  (if (empty-termlist? l)
+      (the-empty-termlist)
+      (let ((t2 (first-term l)))
+        (adjoin-term
+         (make-term (+ (order t1) (order t2))
+                    (mul (coeff t1) (coeff t2)))
+         (mul-term-by-all-terms t1 (rest-terms l))))))
+
+(define (adjoin-term term term-list)
+  (if (=zero? (coeff term))
+      term-list
+      (cons term term-list)))
+(define (the-empty-termlist) '())
+(define (first-term term-list) (car term-list))
+(define (rest-terms term-list) (cdr term-list))
+(define (empty-termlist? term-list) (null? term-list))
+(define (make-term order coeff) (list order coeff))
+(define (order term) (car term))
+(define (coeff term) (cadr term))
+
+;; 87
+(define (poly-zero? p)
+  (define (zero-terms? terms)
+    (if (empty-termlist? terms)
+        true
+        (and (=zero? (coeff (first-term terms)))
+             (zero-terms? (rest-terms terms)))))
+  (zero-terms? (term-list p)))
+(put '=zero? '(polynomial) poly-zero?)
+
+;; 88
+(define (install-negate)
+  (put 'negate '(rational)
+       (lambda (x) (mul x (make-rational -1 1))))
+  (put 'negate '(integer)
+       (lambda (x) (* -1 x)))
+  (put 'negate '(complex)
+       (lambda (x)
+         (make-complex-from-real-imag
+          (negate (real x))
+          (negate (imag x)))))
+  (put 'negate '(real)
+       (lambda (x) (* -1 x)))
+  (define (negate-poly polynomial)
+    (define (neg-termlist termlist)
+      (if (empty-termlist? termlist)
+          termlist
+          (let ((first (first-term termlist)))
+            (adjoin-term (make-term (order first) (negate (coeff first)))
+                         (rest-terms termlist)))))
+    (make-poly (variable polynomial) (neg-termlist (termlist polynomial))))
+  (put 'negate '(polynomial) negate-poly))
+(define (negate x)
+  (apply-generic 'negate x))
+
+(put 'sub '(polynomial polynomial)
+     (lambda (a b)
+       (if (same-variable? (variable a) (variable b))
+           (add a (negate b))
+           (error "polys not in same var: mul-poly" (list a b)))))
+
+;; 89
+
+;; rest-term stay the same
+(define (first-term-dense term-list)
+  (make-term (- (length term-list) 1) (car term-list)))
+;; (define (adjoin-term term term-list)
+;;   (let ((total-order (sub (length term-list) 1)))
+;;     (cond ((equ? (order term) total-order)
+;;            )
+
+;; i'm super unclear on exactly what adjoin-term means and where a term would need to
+;; be inserted in this mode (the other representation just conses new terms without
+;; reguard for order, can i always assume the new term is of a greater order than any
+;; others?) i'll try to come back later.
+
+;; 90
+
+;; come back
+
+;; 91
+
+(define (div-terms l1 l2)
+  (if (empty-termlist? l1)
+      (list (the-empty-termlist) (the-empty-termlist))
+      (let ((t1 (first-term l1))
+            (t2 (first-term l2)))
+        (if (> (order t2) (order t1))
+            (list (the-empty-termlist) l1)
+            (let ((new-c (div (coeff t1) (coeff t2)))
+                  (new-o (- (order t1) (order t2))))
+              (let ((rest-of-result
+                     (div-terms
+                      (sub l1
+                           (mul-term-by-all-terms
+                            (make-term new-o new-c) l2))
+                      l2)))
+                (list (ajdoin-term (make-term new-0 new-c) (car rest-of-result))
+                      (cadr rest-of-result))))))))
+
+(define (div-poly a b)
+  (if (same-variable? a b)
+      (let ((terms (div-terms (term-list a) (term-list b))))
+        (list (make-polynomial (variable a) (car terms))
+              (make-polynomial (variable a) (cadr terms)))
+      (error "not same variable" (list a b)))))
+
+;; 92
+
+;; come back
+
+;; 93
+
+(define (install-rational-package)
+  (define (make-rat n d)
+    (cons n d))
+  (define (numer rat) (car rat))
+  (define (denom rat) (cdr rat))
+  (define (add-rat x y)
+    (make-rat (add (mul (numer x) (denom y))
+                 (mul (numer y) (denom x)))
+              (mul (denom x) (denom y))))
+  (define (sub-rat x y)
+    (make-rat (sub (mul (numer x) (denom y))
+                 (mul (numer y) (denom x)))
+              (mul (denom x) (denom y))))
+  (define (mul-rat x y)
+    (make-rat (mul (numer x) (numer y))
+              (mul (denom x) (denom y))))
+  (define (div-rat x y)
+    (make-rat (mul (numer x) (denom y))
+              (mul (denom x) (numer y))))
+
+  (define (tag x) (attach-tag 'rational x))
+  (put 'add '(rational rational)
+       (lambda (x y) (tag (add-rat x y))))
+  (put 'sub '(rational rational)
+       (lambda (x y) (tag (sub-rat x y))))
+  
+  (put 'mul '(rational rational)
+       (lambda (x y) (tag (mul-rat x y))))
+  
+  (put 'div '(rational rational)
+       (lambda (x y) (tag (div-rat x y))))
+  (put 'make 'rational
+       (lambda (n d) (tag (make-rat n d))))
+  'done)
+
+(define (remainder-terms a b)
+  (cadr (div-terms a b)))
+
+(define (gcd-terms a b)
+  (if (empty-termlist? b)
+      a
+      (gcd-terms b (remainder-terms a b))))
+
+;; 94
+
+(define (gcd-poly a b)
+  (if (same-variable? a b)
+      (make-poly (variable a) (gcd-terms (term-list a) (term-list b)))
+      (error "not same variable: gcd-poly" (list a b))))
+(put 'greatest-common-divisor '(polynomial polynomial) gcd-poly)
+(put 'greatest-common-divisor '(scheme-number scheme-number) gcd)
+(define (greatest-common-divisor a b)
+  (apply-generic 'greatest-common-divisor a b))
+
+;; 95
+
+;; p1 := x^2 - 2x + 1
+;; p2 := 11x^2 + 7
+;; p3 := 13x + 5
+;; q1 = 11x^4 - 22x^3 + 11x^2 + 7x^2 - 10x + 7 = 11x^4 - 22x^3 + 18x^2 - 10x + 7
+;; q2 := 13x^3 - 21x^2 + 3x + 5
+;; gcd(q1, q2)
+
+;; can't see what's happening, these functions can't actually be implemented
+
+;; 96
+
+;; a
+
+(define (psuedoremainder-terms a b)
+  (cadr (div-terms (mul-term-by-all-terms
+                    (exp (coeff (first-term b))
+                         (+ 1 (order (first-term a))
+                            (order (first-term b))))
+                    a)
+                   b))
+(define (gcd-terms a b)
+  (if (empty-termlist? b)
+      a
+      (gcd-terms b (psuedoremainder-terms a b))))
+
+;; b
+(define (map-termslist-terms f terms)
+  (if (empty-termlist? terms)
+      terms
+      (adjoin-term (f (first-term terms)) (map-termslist-terms rest-terms))))
+(define (map-termslist f terms)
+  (if (empty-termlist? terms)
+      '()
+      (cons (f (first-term terms)) (map-termslist rest-terms))))
+(define (gcd-terms a b)
+  (if (empty-termlist? b)
+      (let ((terms-gcd (apply gcd (append (map-termslist coeff a) (map-termslist coeff b)))))
+        (map-termslist-terms (lambda (term)
+                               (make-term (order term) (/ (coeff term) terms-gcd)))
+                             a))
+      (gcd-terms b (psuedoremainder-terms a b))))
+;; 97
+;; a
+(define (reduce-terms n d)
+  (let ((terms-gcd
+         (apply gcd (append (map-termslist coeff n)
+                            (map-termslist coeff d)))))
+    (define (dv-terms terms)
+      (map-termslist-terms (lambda (term)
+                               (make-term (order term) (/ (coeff term) terms-gcd)))
+                             terms))
+    (list (div-terms n) (div-terms d))))
+(define (reduce-poly n d)
+  (if (same-variable? n d)
+      (let ((result (reduce-terms (term-list n) (term-list d))))
+        (list (make-poly (variable n) (car result))
+              (make-poly (variable n) (cadr result))))
+      (error "not same variable")))
+
+  
+;; b
+
+(define (reduce-integers n d)
+  (let ((g (gcd n d)))
+    (list (/ n g) (/ d g))))
+
+(put 'reduce '(polynomial polynomial) reduce-poly)
+(put 'reduce '(scheme-number scheme-number) reduce-integers)
+(define (reduce n d) (apply-generic 'reduce n d))
+(define (make-rat n d)
+  (let ((reduced (reduce n d)))))
