@@ -1140,3 +1140,42 @@
 
 ;; a
 
+;; There are 6 permutations of these operations, but all in which mary's operation
+;; occurs last are equivalent, and all in which it occurs first are equivalent
+;; (but separate). Let Pe, Pa, and M be the operations for the corresponding
+;; people. The 4 distinct operations are:
+
+;; Pe-Pa-M: $45
+;; M-Pe-Pa: $40
+;; Pe-M-Pa: $35
+;; Pa-M-Pe: $50
+
+;; b
+
+;; If Peter's access of balance occurs prior to Paul's set and Pe::set occurs after Pa::set
+;; and M occurs after all, then Pe will set balance to 110 and M will set it to $55
+
+;; If M::get occurs first, followed by all of Pe, followed by M::set, followed by Pa, then
+;; balance will be set to 50 and subsequently $30.
+
+;; 39
+
+;; 101 and 121. Each serialized operation must happen separately
+
+;; 40
+
+;; fuckin boring
+
+;; TODO
+
+;; 41
+
+;; (parallel-execute ((a 'withdraw) (+ 1 (a 'balance)))
+;;                   ((a 'deposit) 12))
+
+;; TODO
+;; This shit is hard
+;; Intuition is that it is helpful and would avoid issues
+;; Serializer takes functions and returns functions such that if one is called while others are 
+;; running the second waits for the first to finish.
+
